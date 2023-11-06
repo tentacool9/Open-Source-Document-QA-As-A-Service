@@ -18,7 +18,7 @@ ___
 - **Frontend**: Run npm start in the qa directory
 - **Backend**: Run python3.8 main.py --local (if you want to run it without the need of OpenAI models) [If you want to make it online use --online] 
 <br><br>
-![Alt text](Screenshot from 2023-11-06 14-20-27.png)
+![Alt text](chadpdfsite.png)
 ___
 ## Tools
 - **LangChain**: Framework for developing applications powered by language models

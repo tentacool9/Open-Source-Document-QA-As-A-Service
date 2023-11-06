@@ -1,4 +1,4 @@
-  import React, { useState, useRef } from 'react';
+  import React, { useState, useRef,useEffect } from 'react';
   import './App.css';
   import profilePic1 from './david.png';  // Adjust the path to match your file structure
   import profilePic2 from './harel.png';
@@ -8,6 +8,58 @@
     const inputRef = useRef(null);
     const fileInputRef = useRef(null); // Ref for the hidden file input
     const [result, setResult] = useState(null);
+    const [directories, setDirectories] = useState([]);
+    const [files, setFiles] = useState([]);
+    const [isLoading, setisLoading] = useState(false);
+    const newDirectoryRef = useRef(null);
+    const [currentDirectory, setCurrentDirectory] = useState('');
+    useEffect(() => {
+      fetchDirectories();
+    }, []);
+
+    const handleDirectoryChange = (event) => {
+      console.log(event.target.value);
+      setCurrentDirectory(event.target.value);
+      fetchFiles(event.target.value);
+    };
+  
+  
+    const fetchDirectories = async () => {
+      const response = await fetch('http://127.0.0.1:8000/directories');
+      const data = await response.json();
+      setDirectories(data.directories);
+      setCurrentDirectory(data.directories[0]);
+      fetchFiles(data.directories[0]);
+    };
+    const fetchFiles = async (currdir) => {
+      const response = await fetch('http://127.0.0.1:8000/fetch-files/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ input :currdir }),
+      });
+      const data = await response.json();
+      setFiles(data.files);
+    };
+    const handleCreateDirectory = async () => {
+      const directory = newDirectoryRef.current.value;
+      if (directory) {
+        const response = await fetch('http://127.0.0.1:8000/create-directory', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ input :directory }),
+        });
+        if (response.ok) {
+          
+        } else {
+          console.error('Failed to create directory');
+        }
+      }
+      fetchDirectories();  // Update the directory list
+    };
 
     const handleSearch = async () => {
       if (searchQuery.trim() === '') {
@@ -20,7 +72,7 @@
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ input: searchQuery })
+        body: JSON.stringify({ input: searchQuery ,currdir: currentDirectory})
       });
       const data = await response.json();
       setResult(data);  // Set the result state variable
@@ -43,29 +95,50 @@
 
     const handlePDFUpload = async (event) => {
       const file = event.target.files[0];
-      if (file && file.name.endsWith('.pdf')) {
+      if (file && file.name.endsWith('.pdf') &&currentDirectory) {
         const formData = new FormData();
-        formData.append('file', file);
-
+        formData.append('file', file);  // Append the file under the key 'file'
+        formData.append('directory', currentDirectory);  // Append the directory under the key 'directory'
+        setisLoading(true);
         const response = await fetch('http://127.0.0.1:8000/upload-pdf', {
           method: 'POST',
           body: formData
         });
-
+        setisLoading(false);
+        fetchFiles(currentDirectory);
         const data = await response.json();
-        console.log(data);
-        alert(`Response from server: ${JSON.stringify(data)}`);
+
       } else {
-        alert('Please select a PDF file.');
+        alert('Please select a PDF file and a directory');
       }
     }
+    
 
     return (
       <div className="App">
+                <aside className="sidebar">
+        <h2>Files in {currentDirectory}</h2>
+        <ul>
+          {files.map((file, index) => (
+            <li key={index}>{file}</li> // Replace `file.name` with your actual file name property
+          ))}
+        </ul>
+      </aside>
+      <div className="content">
         <header className="App-header">
-          <div className="CyberChad">ChadPDF</div>
+          <div className="CyberChad">ChadPDF
+
+          </div>
 
           <div className="search-container">
+          
+          <select className="directory-dropdown" className="directory-dropdown"
+          value={currentDirectory}
+          onChange={handleDirectoryChange}>
+          {directories.map((dir, index) => (
+            <option value={dir} key={index}>{dir}</option>
+          ))}
+        </select>
             <input 
               type="text" 
               placeholder="Search..." 
@@ -74,6 +147,7 @@
               onChange={() => setSearchQuery(inputRef.current.value)}
             />
             <button className="search-button" onClick={handleSearch}>Go</button>
+
           </div>
 
           <div className="madaras-logo">By Madars Podcast</div>
@@ -81,7 +155,13 @@
             <span>+</span>
             <span>PDF</span>
           </div>
-
+          <br></br>
+          {isLoading && (
+  <div className="loading-container">
+    <div className="loader"></div>
+    <div className="loading-message">Loading... this may take some time.</div>
+  </div>
+)}
           {/* Hidden file input for PDF uploading */}
           <input 
             type="file" 
@@ -89,11 +169,25 @@
             style={{ display: 'none' }}
             onChange={handlePDFUpload}
           />
+      <div className="newdir-container">                              <input 
+        type="text" 
+        placeholder="New directory..." 
+        className="new-directory-input" 
+        ref={newDirectoryRef}
+      />
+      
+      <button className="create-directory-button" onClick={handleCreateDirectory}>
+        Create Directory
+      </button></div>
+
+
         </header>
+
         <div className="profile-pics">
         <img src={profilePic1} alt="Profile 1" className="profile-pic" />
         <img src={profilePic2} alt="Profile 2" className="profile-pic" />
       </div>
+      
       <div>
 
       {result && result.result && (
@@ -118,6 +212,7 @@
     )}
         
     </div>
+      </div>
       </div>
     );
   }

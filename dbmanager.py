@@ -28,6 +28,6 @@ class DatabaseManager:
     def set_local_false(self):
         self._is_local = False
 
-    def process_new_items(self,path,vec_path):
-        run_db_build(self._is_local,path=path, vec_path=vec_path)
+    def process_new_items(self,path,vec_path,full_path):
+        run_db_build(self._is_local,path=path, vec_path=vec_path, file_path=full_path)
         return None

@@ -7,6 +7,10 @@ from langchain.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import PyPDFLoader, DirectoryLoader
 from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.embeddings import OpenAIEmbeddings
+import os
+from langchain.llms import OpenAI
+from src.openaikeys import OPENAI_API
 
 # Import config vars
 with open('config/config.yml', 'r', encoding='utf8') as ymlfile:

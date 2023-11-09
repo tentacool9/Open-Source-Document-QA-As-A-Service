@@ -73,7 +73,7 @@ async def upload_pdf(file: UploadFile, directory: str =Form(...)):
         with open(full_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
             mng = DatabaseManager()
-            mng.process_new_items(path=directory,vec_path=directory)
+            mng.process_new_items(path=directory,vec_path=directory,full_path=full_path)
         return {"filename": safe_filename, "directory": safe_directory, "status": "file uploaded"}
     raise HTTPException(status_code=400, detail="File not a PDF")
 
